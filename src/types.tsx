@@ -6,7 +6,6 @@ export interface Repository {
 
 export interface RepositoriesState {
   repositories: Repository[];
-  user: string | null;
 }
 
 export interface SetRepositoriesAction {
@@ -14,10 +13,4 @@ export interface SetRepositoriesAction {
   payload: Repository[];
 }
 
-export interface SetUserAction {
-    type: 'SET_USER';
-    payload: string;
-  }
-
 export type RepositoriesAction = SetRepositoriesAction;
-export type UserAction = SetUserAction;

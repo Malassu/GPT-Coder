@@ -1,21 +1,15 @@
-import { RepositoriesAction, RepositoriesState, UserAction } from '../types';
+import { RepositoriesAction, RepositoriesState } from '../types';
 
 const initialState: RepositoriesState = {
-  repositories: [],
-  user: null
+  repositories: []
 };
 
-const repositoriesReducer = (state = initialState, action: RepositoriesAction | UserAction): RepositoriesState => {
+const repositoriesReducer = (state = initialState, action: RepositoriesAction): RepositoriesState => {
   switch (action.type) {
   case 'SET_REPOSITORIES':
     return {
       ...state,
       repositories: action.payload,
-    };
-  case 'SET_USER':
-    return {
-      ...state,
-      user: action.payload,
     };
   default:
     return state;

@@ -24,6 +24,7 @@ function App(): JSX.Element {
 
   const handleCreate = (values: any): void => {
     console.log(values)
+    fetchRepositories();
     hideModal();
   };
 
@@ -33,6 +34,10 @@ function App(): JSX.Element {
 
   const fetchRepositories = async (): Promise<any> => {
     const accessToken = localStorage.getItem('githubAccessToken');
+    if (accessToken === null) {
+      console.log('No GH access token');
+      return
+    }
     try {
       const response = await axios.get<Repository[]>(`${BACKEND_URL}${LIST_REPOSITORIES_PATH}`, {
         headers: {

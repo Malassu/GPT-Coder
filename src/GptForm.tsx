@@ -27,7 +27,7 @@ function GptForm(): JSX.Element {
     <div className="form-container">
       <Form onFinish={onFinish} ref={formRef} className="form">
         <Form.Item label="Repository" name="repository" rules={[{ required: true, message: 'Please select a repository' }]}>
-          <Select loading={loading} placeholder="Select or create a repository" onChange={handleSelectChange}>
+          <Select loading={loading} placeholder="Select a repository" onChange={handleSelectChange}>
             {repositories.map((repo) => (
               <Option key={repo.id} value={repo.full_name}>
                 {repo.name}
