@@ -1,5 +1,6 @@
 const { GITHUB_API_BASE_URL, PORT } = require('./config');
 const { extractTokenMiddleware } = require('./middleware');
+const { createPullRequest } = require('./service')
 
 const express = require('express');
 const axios = require('axios');
@@ -12,6 +13,7 @@ app.use(
     credentials: true,
   })
 );
+app.use(express.json());
 
 app.get('/repositories', extractTokenMiddleware, async (req, res) => {
   var token = req.token;
@@ -29,6 +31,18 @@ app.get('/repositories', extractTokenMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error fetching repositories:', error);
     res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.post('/ticket', extractTokenMiddleware, async (req, res) => {
+  try {
+    const { description, repository } = req.body;
+    const response = await createPullRequest(description, repository);
+    console.log('GPT completion:', response);
+    res.json(response);
+  } catch (error) {
+    console.error('Error generating completion:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
