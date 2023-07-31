@@ -81,13 +81,19 @@ function App(): JSX.Element {
 
   return (
     <div className="form-container">
-      <h1>CoderGPT</h1>
-      <Button type="primary" onClick={showModal}>
-        Connect to GitHub {githubTokenExists && <span className="checkmark">&#10004;</span>}
-      </Button>
-      <Button type="primary" onClick={showAIModal}>
-        Connect to OpenAI {openaiTokenExists && <span className="checkmark">&#10004;</span>}
-      </Button>
+      <h1>CodeGPT</h1>
+      <div className='button-container'>
+        <div className='connect-button'>
+          <Button type="default" onClick={showModal}>
+            Connect to GitHub {githubTokenExists && <span className="checkmark">&#10004;</span>}
+          </Button>
+        </div>
+        <div className='connect-button'>
+          <Button type="default" onClick={showAIModal}>
+            Connect to OpenAI {openaiTokenExists && <span className="checkmark">&#10004;</span>}
+          </Button>
+        </div>
+      </div>
       <GhModal visible={modalVisible} onCreate={handleCreate} onCancel={hideModal} />
       <AIModal visible={AIModalVisible} onCreate={handleCreateAI} onCancel={hideAIModal} />
       <GptForm />

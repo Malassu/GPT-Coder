@@ -8,6 +8,7 @@ import { BACKEND_URL, CREATE_TICKET_PATH } from './config';
 const { Option } = Select;
 
 import './App.css';
+import { submitButtonStyle } from './styles';
 
 function GptForm(): JSX.Element {
   const formRef = React.useRef<FormInstance>(null);
@@ -68,7 +69,7 @@ function GptForm(): JSX.Element {
         </Form.Item>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" style={submitButtonStyle}>
               Submit
           </Button>
         </Form.Item>

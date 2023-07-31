@@ -1,6 +1,7 @@
 import React from 'react';
 import { Form, Input, Modal, Button } from 'antd';
 import { ModalFormProps } from './props/FormProps';
+import { submitButtonStyle } from './styles';
 
 function GhModal({ visible, onCreate, onCancel }: ModalFormProps): JSX.Element {
   const [form] = Form.useForm();
@@ -24,7 +25,7 @@ function GhModal({ visible, onCreate, onCancel }: ModalFormProps): JSX.Element {
           <Input.Password placeholder="Enter GH access token" />
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" style={submitButtonStyle}>
               Submit
           </Button>
         </Form.Item>
