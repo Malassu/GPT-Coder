@@ -1,26 +1,25 @@
-const { OPENAI_API_KEY, GPT_MODEL } = require('./config');
-const { Configuration, OpenAIApi } = require('openai');
-const { initialChat, preamble } = require('./schema')
+const { GITHUB_API_BASE_URL } = require('./config');
+const { fetchChatCompletion } = require('./gpt');
+const axios = require('axios');
 
-const configuration = new Configuration({
-  apiKey: OPENAI_API_KEY,
-});
-
-const gptApi = new OpenAIApi(configuration);
-
-const parseMessage = (message) => {
-  const start = message.indexOf('{');
-  const end = message.lastIndexOf('}');
-  const jsonString = message.slice(start, end + 1);
-  return JSON.parse(jsonString);
+async function parseGitFolder(repository, token, user) {
+  return
 }
 
-async function createPullRequest(description, repository) {
-  const subtaskResponse = await gptApi.createChatCompletion({
-    model: GPT_MODEL,
-    messages: [{role: 'system', content: preamble}, {role: 'user', content: initialChat(description)}],
+async function createPullRequest(description, repository, ghToken, apiToken) {
+  const subtaskResponse = fetchChatCompletion(description, apiToken);
+  const userResponse = await axios.get(`${GITHUB_API_BASE_URL}/user`, {
+    headers: {
+      Authorization: `Bearer ${ghToken}`,
+    },
   });
-  return parseMessage(subtaskResponse.data.choices[0].message.content);
+  const user = userResponse.data.login;
+  const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${user}/${repository}/contents/`, {
+    headers: {
+      Authorization: `Bearer ${ghToken}`,
+    },
+  });
+  return response.data;
 }
 
 module.exports = {

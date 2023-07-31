@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Input, Modal, Button } from 'antd';
 import { ModalFormProps } from './props/FormProps';
 
-function GhModal({ visible, onCreate, onCancel }: ModalFormProps): JSX.Element {
+function AIModal({ visible, onCreate, onCancel }: ModalFormProps): JSX.Element {
   const [form] = Form.useForm();
   const [loginForm] = Form.useForm();
   const footer = (
@@ -12,16 +12,16 @@ function GhModal({ visible, onCreate, onCancel }: ModalFormProps): JSX.Element {
   );
 
   const onFinish = (values: any): void => {
-    localStorage.setItem('githubAccessToken', values.token);
+    localStorage.setItem('openAIApiToken', values.token);
     onCreate(values);
     form.resetFields();
   };
 
   return (
-    <Modal open={visible} title="Connect to GitHub Repository" onCancel={onCancel} footer={footer}>
+    <Modal open={visible} title="Please enter your OpenAI API token" onCancel={onCancel} footer={footer}>
       <Form form={loginForm} onFinish={onFinish}>
-        <Form.Item name="token" label="Access Token" rules={[{ required: true, message: 'Please enter your access token' }]}>
-          <Input.Password placeholder="Enter GH access token" />
+        <Form.Item name="token" label="API Token" rules={[{ required: true, message: 'Please enter your API token' }]}>
+          <Input.Password placeholder="Enter OpenAI API token" />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit">
@@ -33,4 +33,4 @@ function GhModal({ visible, onCreate, onCancel }: ModalFormProps): JSX.Element {
   );
 }
 
-export default GhModal;
+export default AIModal;

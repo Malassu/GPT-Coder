@@ -8,9 +8,19 @@ import { BACKEND_URL, LIST_REPOSITORIES_PATH } from './config';
 import { Repository, SetRepositoriesAction } from './types';
 
 import './App.css';
+import AIModal from './AIModal';
 
 function App(): JSX.Element {
   const [modalVisible, setModalVisible] = useState(false);
+  const [githubTokenExists, setGithubTokenExists] = useState(false);
+  const [openaiTokenExists, setOpenaiTokenExists] = useState(false);
+
+  useEffect(() => {
+    const githubAccessToken = localStorage.getItem('githubAccessToken');
+    const openaiAccessToken = localStorage.getItem('openAIApiToken');
+    setGithubTokenExists(!!githubAccessToken);
+    setOpenaiTokenExists(!!openaiAccessToken);
+  }, []);
 
   const showModal = (): void => {
     setModalVisible(true);
@@ -23,9 +33,28 @@ function App(): JSX.Element {
   };
 
   const handleCreate = (values: any): void => {
-    console.log(values)
+    console.log(values);
+    const githubAccessToken = localStorage.getItem('githubAccessToken');
+    setGithubTokenExists(!!githubAccessToken);
     fetchRepositories();
     hideModal();
+  };
+
+  const [AIModalVisible, setAIModalVisible] = useState(false);
+
+  const hideAIModal = (): void => {
+    setAIModalVisible(false);
+  };
+
+  const handleCreateAI = (values: any): void => {
+    console.log(values);
+    const openaiAccessToken = localStorage.getItem('openAIApiToken');
+    setOpenaiTokenExists(!!openaiAccessToken);
+    hideAIModal();
+  };
+
+  const showAIModal = (): void => {
+    setAIModalVisible(true);
   };
 
   useEffect(() => {
@@ -54,9 +83,13 @@ function App(): JSX.Element {
     <div className="form-container">
       <h1>CoderGPT</h1>
       <Button type="primary" onClick={showModal}>
-        Connect to GitHub
+        Connect to GitHub {githubTokenExists && <span className="checkmark">&#10004;</span>}
+      </Button>
+      <Button type="primary" onClick={showAIModal}>
+        Connect to OpenAI {openaiTokenExists && <span className="checkmark">&#10004;</span>}
       </Button>
       <GhModal visible={modalVisible} onCreate={handleCreate} onCancel={hideModal} />
+      <AIModal visible={AIModalVisible} onCreate={handleCreateAI} onCancel={hideAIModal} />
       <GptForm />
     </div>
   );

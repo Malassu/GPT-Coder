@@ -1,4 +1,4 @@
-const { GITHUB_API_BASE_URL, PORT } = require('./config');
+const { GITHUB_API_BASE_URL, PORT, GITHUB_ACCESS_TOKEN, OPENAI_API_KEY } = require('./config');
 const { extractTokenMiddleware } = require('./middleware');
 const { createPullRequest } = require('./service')
 
@@ -18,8 +18,8 @@ app.use(express.json());
 app.get('/repositories', extractTokenMiddleware, async (req, res) => {
   var token = req.token;
   if (!token) {
-    res.status(403).json({ message: 'No token provided' });
-    return
+    console.warn('No GH access token in request, defaulting to env');
+    token = GITHUB_ACCESS_TOKEN;
   }
   try {
     const response = await axios.get(`${GITHUB_API_BASE_URL}/user/repos`, {
@@ -35,9 +35,19 @@ app.get('/repositories', extractTokenMiddleware, async (req, res) => {
 });
 
 app.post('/ticket', extractTokenMiddleware, async (req, res) => {
+  var token = req.token;
+  if (!token) {
+    console.warn('No GH access token in request, defaulting to env');
+    token = GITHUB_ACCESS_TOKEN;
+  }
+  var apiToken = req.apiToken;
+  if (!apiToken) {
+    console.warn('No OpenAI access token in request, defaulting to env');
+    apiToken = OPENAI_API_KEY;
+  }
   try {
     const { description, repository } = req.body;
-    const response = await createPullRequest(description, repository);
+    const response = await createPullRequest(description, repository, token, apiToken);
     console.log('GPT completion:', response);
     res.json(response);
   } catch (error) {

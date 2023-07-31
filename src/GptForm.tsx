@@ -21,6 +21,16 @@ function GptForm(): JSX.Element {
     // Do something with the form data
     console.log('Description:', values.description);
     console.log('Repository:', repository);
+    const accessToken = localStorage.getItem('githubAccessToken');
+    if (accessToken === null) {
+      console.log('No GH access token');
+      return
+    }
+    const apiToken = localStorage.getItem('openAIApiToken');
+    if (apiToken === null) {
+      console.log('No OpenAI API token');
+      return
+    }
     const data = {
       description: values.description,
       repository: repository
@@ -28,6 +38,8 @@ function GptForm(): JSX.Element {
     axios.post(`${BACKEND_URL}${CREATE_TICKET_PATH}`, data, {
       headers: {
         'Content-Type': 'application/json',
+        'Authorization-OpenAI': `Bearer ${apiToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     })
       .then((response) => {
