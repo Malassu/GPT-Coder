@@ -1,25 +1,36 @@
 const { GITHUB_API_BASE_URL } = require('./config');
-const { fetchChatCompletion } = require('./gpt');
+const { fetchSubtasks } = require('./gpt');
+const { createBranch, generateUniqueBranchName } = require('./helpers')
 const axios = require('axios');
 
-async function parseGitFolder(repository, token, user) {
-  return
-}
-
 async function createPullRequest(description, repository, ghToken, apiToken) {
-  const subtaskResponse = fetchChatCompletion(description, apiToken);
-  const userResponse = await axios.get(`${GITHUB_API_BASE_URL}/user`, {
-    headers: {
-      Authorization: `Bearer ${ghToken}`,
-    },
-  });
-  const user = userResponse.data.login;
-  const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${user}/${repository}/contents/`, {
-    headers: {
-      Authorization: `Bearer ${ghToken}`,
-    },
-  });
-  return response.data;
+  const subtaskResponse = fetchSubtasks(description, apiToken);
+  try {
+    const repoResponse = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}`, {
+      headers: {
+        Authorization: `Bearer ${ghToken}`,
+      },
+    });
+
+    const defaultBranch = repoResponse.data.default_branch;
+    const newBranch = generateUniqueBranchName();
+    await createBranch(newBranch, defaultBranch, repository, ghToken);
+
+    const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/`,
+      {
+        ref: `refs/heads/${newBranch}`
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${ghToken}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching GitHub information:', error);
+    throw error;
+  }
 }
 
 module.exports = {

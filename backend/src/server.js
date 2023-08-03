@@ -48,7 +48,7 @@ app.post('/ticket', extractTokenMiddleware, async (req, res) => {
   try {
     const { description, repository } = req.body;
     const response = await createPullRequest(description, repository, token, apiToken);
-    console.log('GPT completion:', response);
+    console.log('Created code to git:', response);
     res.json(response);
   } catch (error) {
     console.error('Error generating completion:', error);

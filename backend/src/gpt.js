@@ -23,7 +23,7 @@ const mockResponse = {
   ]
 }
 
-async function fetchChatCompletion(description, apiToken) {
+async function fetchSubtasks(description, apiToken) {
   const configuration = new Configuration({
     apiKey: apiToken,
   });
@@ -39,5 +39,5 @@ async function fetchChatCompletion(description, apiToken) {
 }
 
 module.exports = {
-  fetchChatCompletion
+  fetchSubtasks
 }
