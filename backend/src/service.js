@@ -1,10 +1,10 @@
 const { GITHUB_API_BASE_URL } = require('./config');
-const { fetchSubtasks } = require('./gpt');
-const { createBranch, generateUniqueBranchName } = require('./helpers')
+const { fetchSubtasks, executeTask } = require('./gpt');
+const { createBranch, generateUniqueBranchName, expandRepoContents, fetchRepoContents, sleep } = require('./helpers')
 const axios = require('axios');
 
 async function createPullRequest(description, repository, ghToken, apiToken) {
-  const subtaskResponse = fetchSubtasks(description, apiToken);
+  const subtasks = await fetchSubtasks(description, apiToken);
   try {
     const repoResponse = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}`, {
       headers: {
@@ -16,17 +16,39 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
     const newBranch = generateUniqueBranchName();
     await createBranch(newBranch, defaultBranch, repository, ghToken);
 
-    const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/`,
-      {
-        ref: `refs/heads/${newBranch}`
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${ghToken}`,
-        },
+    var repoContents = await fetchRepoContents(repository, newBranch, ghToken);
+    var expRepoContents = await expandRepoContents(repoContents, repository, ghToken, newBranch);
+    for (let i = 0; i < subtasks.length; i++) {
+      let subtask = subtasks[i];
+      let taskResult = await executeTask(subtask.description, expRepoContents, apiToken);
+      console.log('Subtask execution: ', taskResult);
+      for (let j = 0; j < taskResult.modifiedFiles.length; j++) {
+        let item = taskResult.modifiedFiles[j];
+        let params = {
+          branch: newBranch,
+          message: item.message,
+          content: item.contents,
+        }
+        if(item.sha !== null) {
+          params['sha'] = item.sha;
+        }
+        await axios.put(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,
+          params,
+          {
+            headers: {
+              Authorization: `Bearer ${ghToken}`,
+            },
+          }
+        )
+          .catch(function (error) {
+            console.error('Error pushing to GitHub: ', error);
+            throw error;
+          });
+        await sleep(150);
       }
-    );
-    return response.data;
+    }
+    return {'result': 'SUCCESS'};
+
   } catch (error) {
     console.error('Error fetching GitHub information:', error);
     throw error;
