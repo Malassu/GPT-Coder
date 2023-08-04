@@ -27,10 +27,24 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
         let params = {
           branch: newBranch,
           message: item.message,
-          content: item.contents,
-        }
-        if(item.sha !== null) {
-          params['sha'] = item.sha;
+          content: btoa(item.contents),
+        };
+        let shaRes = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,
+          {
+            ref: `refs/heads/${newBranch}`
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${ghToken}`,
+            },
+          }
+        ).catch(
+          function (error) {
+            console.log('File not found: ', error);
+          }
+        )
+        if (shaRes !== undefined) {
+          params['sha'] = shaRes.data.sha;
         }
         await axios.put(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,
           params,
