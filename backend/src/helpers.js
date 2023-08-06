@@ -9,6 +9,75 @@ function generateUniqueBranchName() {
   return `${prefix}-${timestamp}-${randomString}`;
 }
 
+function putFile(searchPath, newContent, newSha, data, path = '') {
+  for (const item of data) {
+    if (item.type === 'file' && item.path === searchPath) {
+      item.sha = newSha;
+      item.content = newContent;
+      return true;
+    } else if (item.type === 'dir' && Array.isArray(item.content) && searchPath.includes(item.path)) {
+      const found = putFile(searchPath, newContent, newSha, item.content, item.path);
+      if (found) {
+        return true;
+      }
+    }
+  }
+  let currentPath = path;
+  var traversed = path.split('/')
+  var pathParts = searchPath.split('/');
+  const fileName = pathParts.pop();
+  let currentDir = data;
+  if (traversed.length === 1 && traversed[0] === '') traversed = [];
+  pathParts = pathParts.slice(traversed.length);
+
+  for (const dirName of pathParts) {
+    let dirObj = currentDir.find(item => item.type === 'dir' && item.name === dirName);
+    let newPath = `${currentPath}/${dirName}`;
+    if (currentPath === '') newPath = dirName;
+    if (!dirObj) {
+      dirObj = { name: dirName, type: 'dir', path: newPath, content: [] };
+      currentDir.push(dirObj);
+    }
+    currentDir = dirObj.content;
+    currentPath = newPath;
+  }
+
+  currentDir.push({ name: fileName, type: 'file', path: searchPath, sha: newSha, content: newContent });
+  return true;
+}
+
+function updateFile(searchPath, newContent, newSha, data) {
+  for (const item of data) {
+    if (item.type === 'file' && item.path === searchPath) {
+      item.sha = newSha;
+      item.content = newContent;
+      return true;
+    } else if (item.type === 'dir' && Array.isArray(item.content) && searchPath.includes(item.path)) {
+      const found = updateFile(searchPath, newContent, newSha, item.content);
+      if (found) {
+        return true;
+      }
+    }
+  }
+
+  return true;
+}
+
+function getFileSha(path, contents) {
+  for (const item of contents) {
+    if (item.type === 'file' && item.path === path) {
+      return item.sha;
+    } else if (item.type === 'dir' && Array.isArray(item.content) && path.includes(item.path)) {
+      const foundSha = getFileSha(path, item.content);
+      if (foundSha !== null) {
+        return foundSha;
+      }
+    }
+  }
+
+  return null;
+}
+
 async function createBranch(branchName, baseBranch, repository, ghToken) {
   const url = `${GITHUB_API_BASE_URL}/repos/${repository}/git/refs`;
 
@@ -36,17 +105,22 @@ async function createBranch(branchName, baseBranch, repository, ghToken) {
 }
 
 async function fetchRepoContents(repository, branch, ghToken) {
-  const repoResponse = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/`,
-    {
-      ref: `refs/heads/${branch}`
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${ghToken}`,
+  try {
+    const repoResponse = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/`,
+      {
+        ref: `refs/heads/${branch}`
       },
-    }
-  );
-  return repoResponse.data;
+      {
+        headers: {
+          Authorization: `Bearer ${ghToken}`,
+        },
+      }
+    );
+    return repoResponse.data;
+  } catch (error) {
+    console.error('Error fetching repo contents:', error);
+    throw error;
+  } 
 }
 
 async function getBranchReference(branchRef, repository, ghToken) {
@@ -85,7 +159,7 @@ async function expandRepoContents(contents, repository, ghToken, newBranch) {
     );
     await sleep(150);
     if (contents.type === 'file') {
-      contents.content = objectContents.data.content;
+      contents.content = atob(objectContents.data.content);
       return contents;
     } else if (contents.type === 'dir') {
       contents.content = await expandRepoContents(objectContents.data, repository, ghToken, newBranch);
@@ -100,5 +174,8 @@ module.exports = {
   generateUniqueBranchName,
   expandRepoContents,
   fetchRepoContents,
-  sleep
+  sleep,
+  getFileSha,
+  updateFile,
+  putFile
 }

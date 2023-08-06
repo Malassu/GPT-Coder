@@ -1,6 +1,6 @@
 const { GITHUB_API_BASE_URL } = require('./config');
 const { fetchSubtasks, executeTask } = require('./gpt');
-const { createBranch, generateUniqueBranchName, expandRepoContents, fetchRepoContents, sleep } = require('./helpers')
+const { createBranch, generateUniqueBranchName, expandRepoContents, fetchRepoContents, getFileSha, putFile } = require('./helpers')
 const axios = require('axios');
 
 async function createPullRequest(description, repository, ghToken, apiToken) {
@@ -18,35 +18,22 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
 
     var repoContents = await fetchRepoContents(repository, newBranch, ghToken);
     var expRepoContents = await expandRepoContents(repoContents, repository, ghToken, newBranch);
+    console.log("Repo contents: ", expRepoContents);
     for (let i = 0; i < subtasks.length; i++) {
       let subtask = subtasks[i];
       let taskResult = await executeTask(subtask.description, expRepoContents, apiToken);
       console.log('Subtask execution: ', taskResult);
       for (let j = 0; j < taskResult.modifiedFiles.length; j++) {
         let item = taskResult.modifiedFiles[j];
+        let content = btoa(item.contents);
         let params = {
           branch: newBranch,
           message: item.message,
-          content: btoa(item.contents),
+          content: content,
         };
-        let shaRes = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,
-          {
-            ref: `refs/heads/${newBranch}`
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${ghToken}`,
-            },
-          }
-        ).catch(
-          function (error) {
-            console.log('File not found: ', error);
-          }
-        )
-        if (shaRes !== undefined) {
-          params['sha'] = shaRes.data.sha;
-        }
-        await axios.put(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,
+        let sha = getFileSha(item.path, expRepoContents);
+        if(sha !== null) params['sha'] = sha;
+        let fileRes = await axios.put(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,
           params,
           {
             headers: {
@@ -58,8 +45,10 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
             console.error('Error pushing to GitHub: ', error);
             throw error;
           });
-        await sleep(150);
+        let createdSha = fileRes.data.content.sha;
+        putFile(item.path, item.contents, createdSha, expRepoContents);
       }
+      console.log("Updated repo contents: ", expRepoContents);
     }
     return {'result': 'SUCCESS'};
 
