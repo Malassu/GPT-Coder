@@ -5,6 +5,22 @@
   padding: 20px;
 }
 
+.connect-button {
+  padding-bottom: 10px;
+  padding-left: 5px;
+}
+
+.checkmark {
+  padding-left: 5px;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-bottom: 20px;
+}
+
 .form-container {
   display: flex;
   flex-direction: column;
@@ -18,5 +34,12 @@
 }
 
 h1 {
-  color: green;
+  font-family: 'Helvetica', sans-serif;
+  font-weight: 300;
+  letter-spacing: 2px;
+  font-size: 48px;
+  background-image: linear-gradient(to left, #553c9a, #b393d3);
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
 }
