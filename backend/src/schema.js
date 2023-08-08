@@ -16,14 +16,19 @@ const taskResponseSchema = {
 const executeResponseSchema = {
   'type': 'object',
   'properties': {
-    'modifiedFiles': {
-      'type': 'array',
-      'items': {
-        'type': 'object',
-        'properties': {
-          'path': {'type': 'string'},
-          'contents': {'type': 'string'},
-          'message': {'type': 'string'}
+    'filelist': {
+      'type': 'object',
+      'properties': {
+        'modification': {
+          'type': 'array',
+          'items': {
+            'type': 'object',
+            'properties': {
+              'path': {'type': 'string'},
+              'contents': {'type': 'string'},
+              'message': {'type': 'string'}
+            }
+          }
         }
       }
     }
@@ -47,25 +52,25 @@ This JSON has been retreived from GitHub repository content API and recursively 
 The source code of all files has been decoded to text.
 What files from the repository JSON would you change and what new files would you add to the repository described above to fulfill the task description?
 
-Please conform your response to the following JSON format:
-{"modifiedFiles": [{"path": <file_path>, "contents": <new_file_contents>, "message": <message_text>}, ...]}, where:
- - <file_path> is replaced with the path of the file you need to create/update. This field should be a string and shouldn't start with a slash. Please make sure this is the intended path from the repository JSON.
- - <new_file_contents> is replaced with the source code of the file to be created/updated. Do NOT base64 encode this field. This field should be a string.
- - <message_text> is replaced with a commit message that would the best describe the code changes made in this task. This field should be a string.
+Please conform your response to the following XML format without any XML attributes:
+<filelist><modification><path>#file_path#</path><contents>#new_file_contents#</contents><message>#message_text#</message></modification><modification>...</modification></filelist>, where:
+ - #file_path# is replaced with the path of the file you need to create/update. This element should be a string and shouldn't start with a slash. Please make sure this is the intended path from the repository JSON.
+ - #new_file_contents# is replaced with the source code of the file to be created/updated. Do NOT base64 encode this element but leave it as text.
+ - #message_text# is replaced with a commit message that would the best describe the code changes made in this task. This field should be a string.
 When you need to update a file:
-- Base64 decode the "content" of the respective file from the repository contents to analyze what needs to be updated.
-- Make sure you set the <file_path> to the "path" field of the respective file object from the repository contents JSON.
-- Give the updated source code in the value <new_file_contents>
+- See the "content" of the respective file from the repository contents to analyze what needs to be updated.
+- Make sure you set the #file_path# to the "path" field of the respective file object from the repository contents JSON.
+- Give the updated source code in the value #new_file_contents#
 When you need to create a file:
 - Don't create folders separately if they are included in the path of the file.
 - Please make sure that the file doesn't already exist in the repository contents. If it does, update it according to the instructions above.
-- Give the generated source code of the file in <new_file_contents> value`
+- Give the generated source code of the file in #new_file_contents# value`
 
 const preamble = 'You are an API service that consumes plain language input from the user and uses it to return a JSON response.'
 
 const retryTasksPrompt = 'I wasn\'t able to parse that. Could you give your response so that it conforms to the following JSON format: {"subtasks": [{"description": <task_description>}, ...]}'
 
-const retryExecutionPrompt = 'I wasn\'t able to parse that. Could you give your response so that it conforms to the following JSON format: {"modifiedFiles": [{"path": <file_path: string>, "contents": <new_file_contents: string>, "message": <message_text: string>}, ...]}'
+const retryExecutionPrompt = 'I wasn\'t able to parse that. Could you give your response so that it conforms to the following XML format: <filelist><modification><path>#file_path#</path><contents>#new_file_contents#</contents><message>#message_text#</message></modification><modification>...</modification></filelist>'
 
 module.exports = {
   initialChat,

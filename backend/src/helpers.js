@@ -1,5 +1,7 @@
 const { GITHUB_API_BASE_URL } = require('./config');
 const axios = require('axios');
+const { XMLSerializer } = require('xmldom');
+const { DOMParser } = require('xmldom');
 
 function generateUniqueBranchName() {
   const prefix = 'gpt-coder-task';
@@ -169,6 +171,55 @@ async function expandRepoContents(contents, repository, ghToken, newBranch) {
   return contents;
 }
 
+function trimOutsideFilelistTags(str) {
+  const regex = /(<filelist>[\s\S]*<\/filelist>)/;
+  const match = str.match(regex);
+  if (match) {
+    const insideFilelist = match[1].trim();
+    return insideFilelist;
+  } else {
+    return '';
+  }
+}
+
+function nodeToString(node) {
+  const serializer = new XMLSerializer();
+  let result = '';
+  try {
+    result = serializer.serializeToString(node);
+  } catch (error) {
+    console.log('nodeToString Error:', error.message);
+  }
+  return result;
+}
+
+const parseMessage = (message) => {
+  const start = message.indexOf('{');
+  const end = message.lastIndexOf('}');
+  const jsonString = message.slice(start, end + 1);
+  return JSON.parse(jsonString);
+}
+
+function parseXMLMessage(message) {
+  const result = {'filelist':  {'modification': []}};
+  const xmlString = trimOutsideFilelistTags(message);
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+  const modifications = xmlDoc.getElementsByTagName('modification');
+  for(let i = 0; i < modifications.length; i++) {
+    let modification = modifications[i];
+    let contents = modification.getElementsByTagName('contents')[0].childNodes[0]
+    let parsedContents = nodeToString(contents);
+    if(contents === undefined) parsedContents = '';
+    result['filelist']['modification'].push({
+      'path': modification.getElementsByTagName('path')[0].childNodes[0].nodeValue,
+      'contents': parsedContents,
+      'message': modification.getElementsByTagName('message')[0].childNodes[0].nodeValue
+    })
+  }
+  return result;
+}
+
 module.exports = {
   createBranch,
   generateUniqueBranchName,
@@ -177,5 +228,7 @@ module.exports = {
   sleep,
   getFileSha,
   updateFile,
-  putFile
+  putFile,
+  parseMessage,
+  parseXMLMessage
 }
