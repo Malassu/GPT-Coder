@@ -1,6 +1,6 @@
 const { createPullRequest } = require('../src/service');
 const { fetchChatCompletion } = require('../src/gpt');
-const { fetchRepoContents, expandRepoContents, createBranch, parseMessage } = require('../src/helpers');
+const { fetchRepoContents, expandRepoContents, createBranch } = require('../src/helpers');
 const axios = require('axios');
 
 jest.mock('../src/gpt', () => ({
