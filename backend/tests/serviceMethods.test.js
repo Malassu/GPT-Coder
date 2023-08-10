@@ -38,7 +38,7 @@ const expandedRepo = [
       "name": "README.md",
       "path": "README.md",
       "sha": "d37d7779cd624f70485b66967d45f2553a283b82",
-      "content": "This is a fullstack-application",
+      "content": btoa("This is a fullstack-application"),
       "size": 23,
       "url": "https://api.github.com/repos/QCodersOy/fullstack-application/contents/README.md?ref=main",
       "html_url": "https://github.com/QCodersOy/fullstack-application/blob/main/README.md",
@@ -95,7 +95,7 @@ describe('createPullRequest', () => {
           "name": "README.md",
           "path": "README.md",
           "sha": "new-sha",
-          "content": "These are the new contents",
+          "content": btoa("These are the new contents"),
           "size": 23,
           "url": "https://api.github.com/repos/QCodersOy/fullstack-application/contents/README.md?ref=main",
           "html_url": "https://github.com/QCodersOy/fullstack-application/blob/main/README.md",
@@ -148,7 +148,7 @@ describe('createPullRequest', () => {
             "path": "index.html",
             "sha": "new-sha",
             "type": "file",
-            "content": "<h1>Hello world!</h1>"
+            "content": btoa("<h1>Hello world!</h1>")
         }
       ]
     // Call the function and check the result
@@ -195,7 +195,7 @@ describe('createPullRequest', () => {
                     "path": "src/App.js",
                     "sha": "new-sha",
                     "type": "file",
-                    "content": "import React from 'react';"
+                    "content": btoa("import React from 'react';")
                 }
             ]
         }

@@ -172,7 +172,7 @@ async function expandRepoContents(contents, repository, ghToken, newBranch) {
 }
 
 function trimOutsideFilelistTags(str) {
-  const regex = /(<filelist>[\s\S]*<\/filelist>)/;
+  const regex = /(<filelist[\s\S]*<\/filelist>)/;
   const match = str.match(regex);
   if (match) {
     const insideFilelist = match[1].trim();
@@ -213,7 +213,7 @@ function parseXMLMessage(message) {
     if(contents === undefined) parsedContents = '';
     result['filelist']['modification'].push({
       'path': modification.getElementsByTagName('path')[0].childNodes[0].nodeValue,
-      'contents': parsedContents,
+      'contents': btoa(parsedContents),
       'message': modification.getElementsByTagName('message')[0].childNodes[0].nodeValue
     })
   }

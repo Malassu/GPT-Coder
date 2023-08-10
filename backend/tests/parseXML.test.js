@@ -20,7 +20,33 @@ describe('XML Parser', () => {
         "modification": [
           {
             "path": "index.html",
-            "contents": "<h1>hello world!</h1>",
+            "contents": btoa("<h1>hello world!</h1>"),
+            "message": "Create index.html"
+          }
+        ]
+      }
+    };
+
+    expect(parseXMLMessage(xmlString)).toEqual(expectedOutput);
+  });
+
+  it('should ignore XML attributes', () => {
+    const xmlString = `
+      <filelist version='1.0'>
+        <modification>
+          <path>index.html</path>
+          <contents><h1>hello world!</h1></contents>
+          <message>Create index.html</message>
+        </modification>
+      </filelist>
+    `;
+
+    const expectedOutput = {
+      "filelist": {
+        "modification": [
+          {
+            "path": "index.html",
+            "contents": btoa("<h1>hello world!</h1>"),
             "message": "Create index.html"
           }
         ]
@@ -52,12 +78,12 @@ describe('XML Parser', () => {
         "modification": [
           {
             "path": "index.html",
-            "contents": "<h1>hello world!</h1>",
+            "contents": btoa("<h1>hello world!</h1>"),
             "message": "Create index.html"
           },
           {
             "path": "src/hello.html",
-            "contents": "<html><head>Hello there</head></html>",
+            "contents": btoa("<html><head>Hello there</head></html>"),
             "message": "Create hello.html"
           }
         ]
@@ -84,7 +110,7 @@ describe('XML Parser', () => {
         "modification": [
           {
             "path": "index.html",
-            "contents": "",
+            "contents": btoa(""),
             "message": "Create index.html"
           }
         ]
@@ -110,7 +136,7 @@ describe('XML Parser', () => {
         "modification": [
           {
             "path": "index.html",
-            "contents": "<h1>hello world!</h1>",
+            "contents": btoa("<h1>hello world!</h1>"),
             "message": "Create index.html"
           }
         ]

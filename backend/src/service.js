@@ -1,6 +1,6 @@
 const { GITHUB_API_BASE_URL, MAX_REPO_RECURSION } = require('./config');
 const { fetchChatCompletion } = require('./gpt');
-const { initialChat, executeChat, taskResponseSchema, retryTasksPrompt, executeResponseSchema, retryExecutionPrompt } = require('./schema')
+const { initialChat, executeChat, printRepo, taskResponseSchema, retryTasksPrompt, executeResponseSchema, retryExecutionPrompt } = require('./schema')
 const { createBranch, generateUniqueBranchName, expandRepoContents, fetchRepoContents, getFileSha, putFile, parseMessage, parseXMLMessage } = require('./helpers')
 const axios = require('axios');
 const util = require('util')
@@ -39,14 +39,19 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
     for (let i = 0; i < subtasks.length; i++) {
       let subtask = subtasks[i];
       const validateExc = ajv.compile(executeResponseSchema);
-      const resultExc = await fetchChatCompletion(executeChat(subtask.description), apiToken);
+      const resultExc = await fetchChatCompletion(
+        executeChat(subtask.description, printRepo(expRepoContents)), apiToken
+      );
       let taskResult = parseXMLMessage(resultExc);
+      console.log('Task execution result: ', util.inspect(taskResult, {depth: MAX_REPO_RECURSION}));
       let isValidExc = validateExc(taskResult);
       if (!isValidExc) {
         console.warn('Invalid response from GPT, retrying..')
         const retryExc = [{role: 'assistant', content: resultExc}, {role: 'user', content: retryExecutionPrompt}];
-        const resultExcRetried = await fetchChatCompletion(executeChat(subtask.description), apiToken, retryExc);
-        taskResult = parseMessage(resultExcRetried);
+        const resultExcRetried = await fetchChatCompletion(
+          executeChat(subtask.description, printRepo(expRepoContents)), apiToken, retryExc
+        );
+        taskResult = parseXMLMessage(resultExcRetried);
         isValidExc = validateExc(taskResult);
         if (!isValidExc) throw new Error('Invalid GPT response after retry');
       }
@@ -54,7 +59,7 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
       console.log('Subtask execution: ', util.inspect(taskResult, {depth: MAX_REPO_RECURSION}));
       for (let j = 0; j < taskResult.modification.length; j++) {
         let item = taskResult.modification[j];
-        let content = btoa(item.contents);
+        let content = item.contents;
         let params = {
           branch: newBranch,
           message: item.message,
