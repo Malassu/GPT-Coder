@@ -161,7 +161,7 @@ async function expandRepoContents(contents, repository, ghToken, newBranch) {
     );
     await sleep(150);
     if (contents.type === 'file') {
-      contents.content = atob(objectContents.data.content);
+      contents.content = objectContents.data.content;
       return contents;
     } else if (contents.type === 'dir') {
       contents.content = await expandRepoContents(objectContents.data, repository, ghToken, newBranch);
