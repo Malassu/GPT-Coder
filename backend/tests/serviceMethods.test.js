@@ -65,8 +65,7 @@ describe('createPullRequest', () => {
 
   it('updates file successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
-    fetchChatCompletion.mockResolvedValueOnce('{"subtasks": [{"description": "Update README.md"}]}')
-                       .mockResolvedValueOnce(`
+    fetchChatCompletion.mockResolvedValueOnce(`
                           <filelist>
                             <modification>
                                 <path>README.md</path>
@@ -116,8 +115,7 @@ describe('createPullRequest', () => {
 
   it('creates new file successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
-    fetchChatCompletion.mockResolvedValueOnce('{"subtasks": [{"description": "Create index.html"}]}')
-                       .mockResolvedValueOnce(`
+    fetchChatCompletion.mockResolvedValueOnce(`
                           <filelist>
                             <modification>
                                 <path>index.html</path>
@@ -156,10 +154,70 @@ describe('createPullRequest', () => {
     expect(result).toEqual(updatedRepo);
   });
 
+  it('creates new .js file successfully', async () => {
+    // Mock the fetchChatCompletion function for different calls
+    fetchChatCompletion.mockResolvedValueOnce(`
+<filelist>
+  <modification>
+      <path>index.js</path>
+      <contents>
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+      </contents>
+      <message>Create index.html</message>
+  </modification>
+</filelist>`
+);
+
+    // Mock the fetchRepoContents and expandRepoContents functions
+    fetchRepoContents.mockResolvedValue(initialRepo);
+    expandRepoContents.mockResolvedValue(expandedRepo);
+
+    // Mock the createBranch function
+    createBranch.mockResolvedValue();
+
+    // Mock the axios get and put requests
+    axios.get.mockResolvedValueOnce({
+      data: initialRepo,
+    });
+    axios.put.mockResolvedValueOnce({
+      data: { content: { sha: 'new-sha' } },
+    });
+    const updatedRepo = [
+        ...expandedRepo,
+        {
+            "name": "index.js",
+            "path": "index.js",
+            "sha": "new-sha",
+            "type": "file",
+            "content": btoa(`import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);`)
+        }
+      ]
+    // Call the function and check the result
+    const result = await createPullRequest(description, repository, ghToken, apiToken);
+    expect(result).toEqual(updatedRepo);
+  });
+
   it('creates new file in a folder successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
-    fetchChatCompletion.mockResolvedValueOnce('{"subtasks": [{"description": "Create App.js"}]}')
-                       .mockResolvedValueOnce(`
+    fetchChatCompletion.mockResolvedValueOnce(`
                           <filelist>
                             <modification>
                                 <path>src/App.js</path>
