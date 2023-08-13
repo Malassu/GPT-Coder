@@ -208,6 +208,13 @@ function parseXMLMessage(message) {
   return result;
 }
 
+const parseJSONMessage = (message) => {
+  const start = message.indexOf('{');
+  const end = message.lastIndexOf('}');
+  const jsonString = message.slice(start, end + 1);
+  return JSON.parse(jsonString);
+}
+
 module.exports = {
   createBranch,
   generateUniqueBranchName,
@@ -217,5 +224,6 @@ module.exports = {
   getFileSha,
   updateFile,
   putFile,
-  parseXMLMessage
+  parseXMLMessage,
+  parseJSONMessage
 }

@@ -20,6 +20,15 @@ const executeResponseSchema = {
   }
 }
 
+const prTitleSchema = {
+  'type': 'object',
+  'properties': {
+    'prTitle': {
+      'type': 'string',
+    }
+  }
+}
+
 const executeChat = (taskDescription, repoContents) => `Hi, I'm an API service so could you give me your responses in JSON format so I can parse them?
 My purpose is make code changes to a GitHub repository based on a task description.
 The task description is the folllowing: "${taskDescription}".
@@ -41,6 +50,9 @@ When you need to create a file:
 - Don't create folders separately if they are included in the path of the file.
 - Please make sure that the file doesn't already exist in the repository contents. If it does, update it according to the instructions above.
 - Give the generated source code of the file in #new_file_contents# value`
+
+const prTitle = (description) => `What would be the best GitHub pull request title for a PR that implements the following changes: ${description}
+Please give your response in the following JSON format: {"prTitle": <your_response>}, where you replace <your_response> with the PR title suggestion.`
 
 const preamble = 'You are an API service that consumes plain language input from the user and uses it to return a JSON or an XML response based on user preference.'
 
@@ -65,5 +77,7 @@ module.exports = {
   preamble,
   executeResponseSchema,
   retryExecutionPrompt,
-  printRepo
+  printRepo,
+  prTitle,
+  prTitleSchema
 };
