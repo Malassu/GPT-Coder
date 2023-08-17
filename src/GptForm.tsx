@@ -87,6 +87,7 @@ function GptForm(): JSX.Element {
       <div className='result-container'>
         <Card title="PR URLs" className='card'>
           <List
+            loading={resLoading}
             dataSource={prRefs}
             renderItem={(item) => (
               <List.Item>

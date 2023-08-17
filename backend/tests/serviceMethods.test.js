@@ -66,14 +66,13 @@ describe('createPullRequest', () => {
   it('updates file successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
     fetchChatCompletion.mockResolvedValueOnce(`
-                          <filelist>
-                            <modification>
-                                <path>README.md</path>
-                                <contents>These are the new contents</contents>
-                                <message>Update README.md</message>
-                            </modification>
-                          </filelist>`
-                        );
+      <modification>
+        <path>README.md</path>
+        <contents>These are the new contents</contents>
+        <message>Update README.md</message>
+      </modification>`
+    );
+    fetchChatCompletion.mockResolvedValueOnce('{"prTitle": "PR Title"}');
 
     // Mock the fetchRepoContents and expandRepoContents functions
     fetchRepoContents.mockResolvedValue(initialRepo);
@@ -88,6 +87,9 @@ describe('createPullRequest', () => {
     });
     axios.put.mockResolvedValueOnce({
       data: { content: { sha: 'new-sha' } },
+    });
+    axios.post.mockResolvedValueOnce({
+      data: { html_url: 'github.com/pr' },
     });
     const updatedRepo = [
         {
@@ -109,21 +111,20 @@ describe('createPullRequest', () => {
         }
       ]
     // Call the function and check the result
-    const result = await createPullRequest(description, repository, ghToken, apiToken);
+    const result = (await createPullRequest(description, repository, ghToken, apiToken)).repoContents;
     expect(result).toEqual(updatedRepo);
   });
 
   it('creates new file successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
     fetchChatCompletion.mockResolvedValueOnce(`
-                          <filelist>
-                            <modification>
-                                <path>index.html</path>
-                                <contents><h1>Hello world!</h1></contents>
-                                <message>Create index.html</message>
-                            </modification>
-                          </filelist>`
-                        );
+      <modification>
+        <path>index.html</path>
+        <contents><h1>Hello world!</h1></contents>
+        <message>Create index.html</message>
+      </modification>`
+    );
+    fetchChatCompletion.mockResolvedValueOnce('{"prTitle": "PR Title"}');
 
     // Mock the fetchRepoContents and expandRepoContents functions
     fetchRepoContents.mockResolvedValue(initialRepo);
@@ -139,6 +140,9 @@ describe('createPullRequest', () => {
     axios.put.mockResolvedValueOnce({
       data: { content: { sha: 'new-sha' } },
     });
+    axios.post.mockResolvedValueOnce({
+      data: { html_url: 'github.com/pr' },
+    });
     const updatedRepo = [
         ...expandedRepo,
         {
@@ -150,14 +154,13 @@ describe('createPullRequest', () => {
         }
       ]
     // Call the function and check the result
-    const result = await createPullRequest(description, repository, ghToken, apiToken);
+    const result = (await createPullRequest(description, repository, ghToken, apiToken)).repoContents;
     expect(result).toEqual(updatedRepo);
   });
 
-  it('creates new .js file successfully', async () => {
+  it('creates two files successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
     fetchChatCompletion.mockResolvedValueOnce(`
-<filelist>
   <modification>
       <path>index.js</path>
       <contents>
@@ -174,8 +177,13 @@ ReactDOM.render(
       </contents>
       <message>Create index.html</message>
   </modification>
-</filelist>`
+  <modification>
+    <path>second.js</path>
+    <contents>console.log("Second file!")</contents>
+    <message>Create second.js</message>
+  </modification>`
 );
+    fetchChatCompletion.mockResolvedValueOnce('{"prTitle": "PR Title"}');
 
     // Mock the fetchRepoContents and expandRepoContents functions
     fetchRepoContents.mockResolvedValue(initialRepo);
@@ -190,6 +198,12 @@ ReactDOM.render(
     });
     axios.put.mockResolvedValueOnce({
       data: { content: { sha: 'new-sha' } },
+    });
+    axios.put.mockResolvedValueOnce({
+      data: { content: { sha: 'new-sha2' } },
+    });
+    axios.post.mockResolvedValueOnce({
+      data: { html_url: 'github.com/pr' },
     });
     const updatedRepo = [
         ...expandedRepo,
@@ -208,24 +222,30 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById('root')
 );`)
+        },
+        {
+          "name": "second.js",
+          "path": "second.js",
+          "sha": "new-sha2",
+          "type": "file",
+          "content": btoa('console.log("Second file!")')
         }
       ]
     // Call the function and check the result
-    const result = await createPullRequest(description, repository, ghToken, apiToken);
+    const result = (await createPullRequest(description, repository, ghToken, apiToken)).repoContents;
     expect(result).toEqual(updatedRepo);
   });
 
   it('creates new file in a folder successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
     fetchChatCompletion.mockResolvedValueOnce(`
-                          <filelist>
-                            <modification>
-                                <path>src/App.js</path>
-                                <contents>import React from 'react';</contents>
-                                <message>Create App.js</message>
-                            </modification>
-                          </filelist>`
-                        );
+      <modification>
+        <path>src/App.js</path>
+        <contents>import React from 'react';</contents>
+        <message>Create App.js</message>
+      </modification>`
+    );
+    fetchChatCompletion.mockResolvedValueOnce('{"prTitle": "PR Title"}');
 
     // Mock the fetchRepoContents and expandRepoContents functions
     fetchRepoContents.mockResolvedValue(initialRepo);
@@ -240,6 +260,9 @@ ReactDOM.render(
     });
     axios.put.mockResolvedValueOnce({
       data: { content: { sha: 'new-sha' } },
+    });
+    axios.post.mockResolvedValueOnce({
+      data: { html_url: 'github.com/pr' },
     });
     const updatedRepo = [
         ...expandedRepo,
@@ -259,7 +282,7 @@ ReactDOM.render(
         }
       ]
     // Call the function and check the result
-    const result = await createPullRequest(description, repository, ghToken, apiToken);
+    const result = (await createPullRequest(description, repository, ghToken, apiToken)).repoContents;
     expect(result).toEqual(updatedRepo);
   });
 

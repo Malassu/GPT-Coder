@@ -29,7 +29,7 @@ const prTitleSchema = {
   }
 }
 
-const executeChat = (taskDescription, repoContents) => `Hi, I'm an API service so could you give me your responses in JSON format so I can parse them?
+const executeChat = (taskDescription, repoContents) => `Hi, I'm an API service so could you give me your responses strictly formatted so I can parse them?
 My purpose is make code changes to a GitHub repository based on a task description.
 The task description is the folllowing: "${taskDescription}".
 The repository file paths and contents, separated with "---", are as follows:\n---${repoContents}\n
@@ -37,11 +37,11 @@ These contents been retreived from GitHub repository content API.
 The source code of all files has been decoded to text.
 What files from the repository would you change and what new files would you add to the repository described above to fulfill the task description?
 
-Please conform your response to the following XML format without any XML attributes:
-<filelist><modification><path>#file_path#</path><contents>#new_file_contents#</contents><message>#message_text#</message></modification><modification>...</modification></filelist>, where:
+Please conform each modification in your response to the following format so that I can parse the reponse by catching the start/end markers using regex:
+<modification><path>#file_path#</path><contents>#new_file_contents#</contents><message>#message_text#</message></modification>, where:
  - #file_path# is replaced with the path of the file you need to create/update. This element should be a string and shouldn't start with a slash. Please make sure this is the intended path from the repository.
- - #new_file_contents# is replaced with the source code of the file to be created/updated. Do NOT base64 encode this element but leave it as text. And make sure all whitespace and identation is correct for the text between the <contents> tags.
- - #message_text# is replaced with a commit message that would the best describe the code changes made in this task. This field should be a string.
+ - #new_file_contents# is replaced with the source code of the file to be created/updated. This is a string representation of the file contents and I'll parse them from each modification using the following regex:  /\\<contents\\>([\\s\\S]+?)\\<\\/contents\\>/. Please make sure that if I write the parsed text to a file, all the identation and whitespace in the resulting file is valid with respect to the file type.
+ - #message_text# is replaced with a commit message that would the best describe the code changes made for the modification. This field should be a string.
 When you need to update a file:
 - See the "File contents" of the respective file from the repository contents to analyze what needs to be updated.
 - Make sure you set the #file_path# to the "path" field of the respective file object from the repository contents.
@@ -54,9 +54,9 @@ When you need to create a file:
 const prTitle = (description) => `What would be the best GitHub pull request title for a PR that implements the following changes: ${description}
 Please give your response in the following JSON format: {"prTitle": <your_response>}, where you replace <your_response> with the PR title suggestion.`
 
-const preamble = 'You are an API service that consumes plain language input from the user and uses it to return a JSON or an XML response based on user preference.'
+const preamble = 'You are an API service that consumes plain language input from the client and uses it to return a response that is formatted based on user preference.'
 
-const retryExecutionPrompt = 'I wasn\'t able to parse that. Could you give your response so that it conforms to the following XML format: <filelist><modification><path>#file_path#</path><contents>#new_file_contents#</contents><message>#message_text#</message></modification><modification>...</modification></filelist>'
+const retryExecutionPrompt = 'I wasn\'t able to parse that. Could you give your response so that it conforms to the following format: <filelist><modification><path>#file_path#</path><contents>#new_file_contents#</contents><message>#message_text#</message></modification><modification>...</modification></filelist>'
 
 function printRepo(repoContents, resultString = '') {
   for (const item of repoContents) {

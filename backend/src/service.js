@@ -90,7 +90,7 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
         },
       }
     )
-    return {'pullRequest': pullRes.data.html_url};
+    return {'pullRequest': pullRes.data.html_url, 'repoContents': expRepoContents};
 
   } catch (error) {
     console.error('Error fetching GitHub information:', error);
