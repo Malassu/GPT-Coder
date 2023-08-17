@@ -170,26 +170,15 @@ async function expandRepoContents(contents, repository, ghToken, newBranch) {
   return contents;
 }
 
-function trimOutsideFilelistTags(str) {
-  const regex = /(<filelist[\s\S]*<\/filelist>)/;
-  const match = str.match(regex);
-  if (match) {
-    return match[1].trim();
-  } else {
-    return '';
-  }
-}
-
 function parseXMLMessage(message) {
   const result = {'filelist':  {'modification': []}};
-  const xmlString = trimOutsideFilelistTags(message);
   const modRegex = /\<modification\>([\s\S]+?)\<\/modification\>/g;
   const pathRegex = /\<path\>([\s\S]+?)\<\/path\>/;
   const contentsRegex = /\<contents\>([\s\S]+?)\<\/contents\>/;
   const messageRegex = /\<message\>([\s\S]+?)\<\/message\>/;
   let modification;
 
-  while((modification = modRegex.exec(xmlString))) {
+  while((modification = modRegex.exec(message))) {
     const path = modification[1].match(pathRegex);
     const contents = modification[1].match(contentsRegex);
     const message = modification[1].match(messageRegex);
@@ -208,6 +197,13 @@ function parseXMLMessage(message) {
   return result;
 }
 
+const parseJSONMessage = (message) => {
+  const start = message.indexOf('{');
+  const end = message.lastIndexOf('}');
+  const jsonString = message.slice(start, end + 1);
+  return JSON.parse(jsonString);
+}
+
 module.exports = {
   createBranch,
   generateUniqueBranchName,
@@ -217,5 +213,6 @@ module.exports = {
   getFileSha,
   updateFile,
   putFile,
-  parseXMLMessage
+  parseXMLMessage,
+  parseJSONMessage
 }

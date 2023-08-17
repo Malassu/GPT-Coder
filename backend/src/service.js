@@ -1,7 +1,7 @@
 const { GITHUB_API_BASE_URL, MAX_REPO_RECURSION } = require('./config');
 const { fetchChatCompletion } = require('./gpt');
-const { executeChat, printRepo, executeResponseSchema, retryExecutionPrompt } = require('./schema')
-const { createBranch, generateUniqueBranchName, expandRepoContents, fetchRepoContents, getFileSha, putFile, parseXMLMessage } = require('./helpers')
+const { executeChat, printRepo, executeResponseSchema, retryExecutionPrompt, prTitle, prTitleSchema } = require('./schema')
+const { createBranch, generateUniqueBranchName, expandRepoContents, fetchRepoContents, getFileSha, putFile, parseXMLMessage, parseJSONMessage } = require('./helpers')
 const axios = require('axios');
 const util = require('util')
 const Ajv = require('ajv');
@@ -68,7 +68,29 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
       putFile(item.path, item.contents, createdSha, expRepoContents);
     }
     console.log('Updated repo contents: ', util.inspect(expRepoContents, {depth: MAX_REPO_RECURSION}));
-    return expRepoContents;
+    const validatePr = ajv.compile(prTitleSchema);
+    const resultPr = await fetchChatCompletion(
+      prTitle(description), apiToken
+    );
+    let prResult = parseJSONMessage(resultPr);
+    console.log('PR title result: ', prResult);
+    let isValidPr = validatePr(prResult);
+    let prTitleText = `CodeGPT task: ${newBranch}`;
+    if (isValidPr) prTitleText = prResult.prTitle;
+    let pullRes = await axios.post(`${GITHUB_API_BASE_URL}/repos/${repository}/pulls`,
+      {
+        head: newBranch,
+        base: defaultBranch,
+        body: description,
+        title: prTitleText
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${ghToken}`,
+        },
+      }
+    )
+    return {'pullRequest': pullRes.data.html_url, 'repoContents': expRepoContents};
 
   } catch (error) {
     console.error('Error fetching GitHub information:', error);

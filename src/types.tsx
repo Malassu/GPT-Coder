@@ -13,4 +13,9 @@ export interface SetRepositoriesAction {
   payload: Repository[];
 }
 
+export interface TypePrRef {
+  repository: string;
+  prUrl: string;
+}
+
 export type RepositoriesAction = SetRepositoriesAction;
