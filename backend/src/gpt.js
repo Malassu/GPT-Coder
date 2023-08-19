@@ -3,6 +3,7 @@ const { preamble } = require('./schema');
 const { GPT_MODEL } = require('./config');
 
 async function fetchChatCompletion(prompt, apiToken, retry = []) {
+  console.log('Fetching chat completion for: ', prompt);
   const configuration = new Configuration({
     apiKey: apiToken,
   });

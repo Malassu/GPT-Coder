@@ -66,11 +66,11 @@ describe('createPullRequest', () => {
   it('updates file successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
     fetchChatCompletion.mockResolvedValueOnce(`
-      <modification>
-        <path>README.md</path>
-        <contents>These are the new contents</contents>
-        <message>Update README.md</message>
-      </modification>`
+      <|fileUpdate>
+        <|path>README.md</|path>
+        <|contents>These are the new contents</|contents>
+        <|message>Update README.md</|message>
+      </|fileUpdate>`
     );
     fetchChatCompletion.mockResolvedValueOnce('{"prTitle": "PR Title"}');
 
@@ -118,11 +118,11 @@ describe('createPullRequest', () => {
   it('creates new file successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
     fetchChatCompletion.mockResolvedValueOnce(`
-      <modification>
-        <path>index.html</path>
-        <contents><h1>Hello world!</h1></contents>
-        <message>Create index.html</message>
-      </modification>`
+      <|fileUpdate>
+        <|path>index.html</|path>
+        <|contents><h1>Hello world!</h1></|contents>
+        <|message>Create index.html</|message>
+      </|fileUpdate>`
     );
     fetchChatCompletion.mockResolvedValueOnce('{"prTitle": "PR Title"}');
 
@@ -161,9 +161,9 @@ describe('createPullRequest', () => {
   it('creates two files successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
     fetchChatCompletion.mockResolvedValueOnce(`
-  <modification>
-      <path>index.js</path>
-      <contents>
+  <|fileUpdate>
+      <|path>index.js</|path>
+      <|contents>
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
@@ -174,14 +174,14 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById('root')
 );
-      </contents>
-      <message>Create index.html</message>
-  </modification>
-  <modification>
-    <path>second.js</path>
-    <contents>console.log("Second file!")</contents>
-    <message>Create second.js</message>
-  </modification>`
+      </|contents>
+      <|message>Create index.html</|message>
+  </|fileUpdate>
+  <|fileUpdate>
+    <|path>second.js</|path>
+    <|contents>console.log("Second file!")</|contents>
+    <|message>Create second.js</|message>
+  </|fileUpdate>`
 );
     fetchChatCompletion.mockResolvedValueOnce('{"prTitle": "PR Title"}');
 
@@ -239,11 +239,11 @@ ReactDOM.render(
   it('creates new file in a folder successfully', async () => {
     // Mock the fetchChatCompletion function for different calls
     fetchChatCompletion.mockResolvedValueOnce(`
-      <modification>
-        <path>src/App.js</path>
-        <contents>import React from 'react';</contents>
-        <message>Create App.js</message>
-      </modification>`
+      <|fileUpdate>
+        <|path>src/App.js</|path>
+        <|contents>import React from 'react';</|contents>
+        <|message>Create App.js</|message>
+      </|fileUpdate>`
     );
     fetchChatCompletion.mockResolvedValueOnce('{"prTitle": "PR Title"}');
 

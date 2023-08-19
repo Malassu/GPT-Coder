@@ -172,10 +172,10 @@ async function expandRepoContents(contents, repository, ghToken, newBranch) {
 
 function parseXMLMessage(message) {
   const result = {'filelist':  {'modification': []}};
-  const modRegex = /\<modification\>([\s\S]+?)\<\/modification\>/g;
-  const pathRegex = /\<path\>([\s\S]+?)\<\/path\>/;
-  const contentsRegex = /\<contents\>([\s\S]+?)\<\/contents\>/;
-  const messageRegex = /\<message\>([\s\S]+?)\<\/message\>/;
+  const modRegex = /\<\|fileUpdate\>([\s\S]+?)\<\/\|fileUpdate\>/g;
+  const pathRegex = /\<\|path\>([\s\S]+?)\<\/\|path\>/;
+  const contentsRegex = /\<\|contents\>([\s\S]+?)\<\/\|contents\>/;
+  const messageRegex = /\<\|message\>([\s\S]+?)\<\/\|message\>/;
   let modification;
 
   while((modification = modRegex.exec(message))) {
