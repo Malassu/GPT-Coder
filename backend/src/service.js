@@ -1,14 +1,14 @@
 const { GITHUB_API_BASE_URL, MAX_REPO_RECURSION } = require('./config');
 const { fetchChatCompletion } = require('./gpt');
 const { executeChat, printRepo, executeResponseSchema, retryExecutionPrompt, prTitle, prTitleSchema } = require('./schema')
-const { createBranch, generateUniqueBranchName, expandRepoContents, fetchRepoContents, getFileSha, putFile, parseXMLMessage, parseJSONMessage } = require('./helpers')
+const { createBranch, generateUniqueBranchName, expandRepoContents, fetchRepoContents, getFileSha, putFile, parseXMLMessage, parseJSONMessage, sleep, cloneGitRepository, expandRepoContentsCli } = require('./helpers')
 const axios = require('axios');
 const util = require('util')
 const Ajv = require('ajv');
 
 const ajv = new Ajv();
 
-async function createPullRequest(description, repository, ghToken, apiToken) {
+async function createPullRequest(description, repository, ghToken, apiToken, cli = false) {
   try {
     const repoResponse = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}`, {
       headers: {
@@ -17,11 +17,20 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
     });
 
     const defaultBranch = repoResponse.data.default_branch;
+    const repoFullName = repoResponse.data.full_name;
     const newBranch = generateUniqueBranchName();
     await createBranch(newBranch, defaultBranch, repository, ghToken);
 
-    var repoContents = await fetchRepoContents(repository, newBranch, ghToken);
-    var expRepoContents = await expandRepoContents(repoContents, repository, ghToken, newBranch);
+    var repoContents = [];
+    var expRepoContents = [];
+    if(cli) {
+      const tmpDir = cloneGitRepository(repoFullName);
+      console.log('Temporary directory created: ', tmpDir);
+      expRepoContents = expandRepoContentsCli(tmpDir);
+    } else {
+      repoContents = await fetchRepoContents(repository, newBranch, ghToken);
+      expRepoContents = await expandRepoContents(repoContents, repository, ghToken, newBranch);
+    }
     console.log('Repo contents: ', util.inspect(expRepoContents, {depth: MAX_REPO_RECURSION}));
     const validateExc = ajv.compile(executeResponseSchema);
     const resultExc = await fetchChatCompletion(
@@ -51,7 +60,26 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
         content: content,
       };
       let sha = getFileSha(item.path, expRepoContents);
-      if(sha !== null) params['sha'] = sha;
+      if(sha !== null && sha !== undefined) params['sha'] = sha;
+      if(sha === undefined) {
+        await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,
+          {
+            ref: `refs/heads/${newBranch}`
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${ghToken}`,
+            },
+          }
+        )
+          .then((response) => {
+            params['sha'] = response.data.sha;
+          })
+          .catch((error) => {
+            console.log('Error fetching updated/created file, reverting to non-existing SHA: ', error);
+          });
+        await sleep(200);
+      }
       let fileRes = await axios.put(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,
         params,
         {
@@ -64,6 +92,7 @@ async function createPullRequest(description, repository, ghToken, apiToken) {
           console.error('Error pushing to GitHub: ', error);
           throw error;
         });
+      await sleep(200);
       let createdSha = fileRes.data.content.sha;
       putFile(item.path, item.contents, createdSha, expRepoContents);
     }

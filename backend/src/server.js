@@ -46,8 +46,9 @@ app.post('/ticket', extractTokenMiddleware, async (req, res) => {
     apiToken = OPENAI_API_KEY;
   }
   try {
-    const { description, repository } = req.body;
-    const response = await createPullRequest(description, repository, token, apiToken);
+    const { description, repository, cli } = req.body;
+    const useCli = cli === 'true';
+    const response = await createPullRequest(description, repository, token, apiToken, useCli);
     console.log('Created code to git:', response);
     res.json(response);
   } catch (error) {

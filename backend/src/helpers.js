@@ -2,6 +2,25 @@
 const { GITHUB_API_BASE_URL } = require('./config');
 const axios = require('axios');
 
+const filteredExtensions = [
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.bmp',
+  'package-lock.json',
+  'yarn.lock',
+  '.zip',
+  '.tar',
+  '.gz',
+  '.git'
+];
+
+function isExcluded(filePath) {
+  const extension = filePath.toLowerCase(); // Get the last 4 characters as extension
+  return filteredExtensions.some(item => extension.includes(item));
+}
+
 function generateUniqueBranchName() {
   const prefix = 'gpt-coder-task';
   const timestamp = Date.now().toString(36);
@@ -170,6 +189,42 @@ async function expandRepoContents(contents, repository, ghToken, newBranch) {
   return contents;
 }
 
+
+function cloneGitRepository(repositoryFull) {
+  var shell = require('shelljs');
+  if (!shell.which('git')) {
+    shell.echo('Sorry, this script requires git');
+    shell.exit(1);
+  }
+  const tmpDir = generateUniqueBranchName();
+  if(shell.exec(`git clone git@github.com:${repositoryFull}.git ${tmpDir}`).code !== 0) throw new Error('Cannot clone git repository');
+  return tmpDir;
+}
+
+
+function expandRepoContentsCli(tmpDir) {
+  var shell = require('shelljs');
+  const contents = [];
+  shell.find(`${tmpDir}/`).map(function(file){
+    let newStr = file.replace(`${tmpDir}/`, '');
+    if (newStr !== '') return newStr;
+  })
+    .filter(function(file) {
+      if(file == undefined) return false;
+      return !isExcluded(file);
+    })
+    .forEach(function(file) {
+      try {
+        let content = btoa(shell.cat([`${tmpDir}/${file}`]));
+        contents.push({name: file.split('/').at(-1), path: file, type: 'file', content: content, sha: undefined});
+      } catch (error) {
+        console.warn(`Encountered error: ${error} while processing file: `, file);
+      }
+    });
+  shell.rm('-rf', tmpDir);
+  return contents;
+}
+
 function parseXMLMessage(message) {
   const result = {'filelist':  {'modification': []}};
   const modRegex = /\<\|fileUpdate\>([\s\S]+?)\<\/\|fileUpdate\>/g;
@@ -205,6 +260,8 @@ const parseJSONMessage = (message) => {
 }
 
 module.exports = {
+  cloneGitRepository,
+  expandRepoContentsCli,
   createBranch,
   generateUniqueBranchName,
   expandRepoContents,

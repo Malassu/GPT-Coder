@@ -1,6 +1,6 @@
 const { createPullRequest } = require('../src/service');
 const { fetchChatCompletion } = require('../src/gpt');
-const { fetchRepoContents, expandRepoContents, createBranch } = require('../src/helpers');
+const { fetchRepoContents, expandRepoContents, createBranch, cloneGitRepository } = require('../src/helpers');
 const axios = require('axios');
 
 jest.mock('../src/gpt', () => ({
@@ -12,6 +12,7 @@ jest.mock('../src/helpers', () => ({
   fetchRepoContents: jest.fn(),
   expandRepoContents: jest.fn(),
   createBranch: jest.fn(),
+  cloneGitRepository: jest.fn()
 }));
 
 const initialRepo = [
@@ -60,6 +61,7 @@ describe('createPullRequest', () => {
   // Mocked values
   const description = 'user message';
   const repository = 'your/repository';
+  const tmpDir = 'tmp-repository';
   const ghToken = 'github-token';
   const apiToken = 'api-token';
 
@@ -283,6 +285,110 @@ ReactDOM.render(
       ]
     // Call the function and check the result
     const result = (await createPullRequest(description, repository, ghToken, apiToken)).repoContents;
+    expect(result).toEqual(updatedRepo);
+  });
+
+  it('updates file successfully on cli', async () => {
+    // Mock the fetchChatCompletion function for different calls
+    var shell = require('shelljs');
+    shell.mkdir([tmpDir]);
+    shell.touch([`${tmpDir}/README.md`]);
+    shell.exec(`echo "This is a fullstack-application" > ${tmpDir}/README.md`);
+    fetchChatCompletion.mockResolvedValueOnce(`
+      <|fileUpdate>
+        <|path>README.md</|path>
+        <|contents>These are the new contents</|contents>
+        <|message>Update README.md</|message>
+      </|fileUpdate>`
+    );
+    fetchChatCompletion.mockResolvedValueOnce('{"prTitle": "PR Title"}');
+
+    cloneGitRepository.mockReturnValue(tmpDir);
+
+    // Mock the createBranch function
+    createBranch.mockResolvedValue();
+
+    // Mock the axios get and put requests
+    axios.get.mockResolvedValueOnce({
+      data: initialRepo,
+    });
+    axios.get.mockResolvedValueOnce({
+      data: {sha: "fetched-sha"},
+    });
+    axios.put.mockResolvedValueOnce({
+      data: { content: { sha: 'updated-sha' } },
+    });
+    axios.post.mockResolvedValueOnce({
+      data: { html_url: 'github.com/pr' },
+    });
+    const updatedRepo = [
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "sha": "updated-sha",
+          "type": "file",
+          "content": btoa("These are the new contents")
+        }
+      ]
+    // Call the function and check the result
+    const result = (await createPullRequest(description, repository, ghToken, apiToken, true)).repoContents;
+    expect(result).toEqual(updatedRepo);
+  });
+
+  it('creates new file successfully on cli', async () => {
+    // Mock the fetchChatCompletion function for different calls
+    var shell = require('shelljs');
+    shell.mkdir([`${tmpDir}-2`]);
+    shell.touch([`${tmpDir}-2/README.md`]);
+    shell.exec(`echo "This is a fullstack-application" > ${tmpDir}-2/README.md`);
+    fetchChatCompletion.mockResolvedValueOnce(`
+      <|fileUpdate>
+        <|path>index.html</|path>
+        <|contents><h1>Hello world!</h1></|contents>
+        <|message>Create index.html</|message>
+      </|fileUpdate>`
+    );
+    fetchChatCompletion.mockResolvedValueOnce('{"prTitle": "PR Title"}');
+
+    cloneGitRepository.mockReturnValue(`${tmpDir}-2`);
+
+    // Mock the createBranch function
+    createBranch.mockResolvedValue();
+
+    // Mock the axios get and put requests
+    axios.get.mockResolvedValueOnce({
+      data: initialRepo,
+    });
+    axios.get.mockRejectedValueOnce({
+      response: {
+        status: 404,
+        data: 'Not Found',
+      },
+    });
+    axios.put.mockResolvedValueOnce({
+      data: { content: { sha: 'new-sha' } },
+    });
+    axios.post.mockResolvedValueOnce({
+      data: { html_url: 'github.com/pr' },
+    });
+    const updatedRepo = [
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "sha": undefined,
+          "type": "file",
+          "content": btoa("This is a fullstack-application\n")
+        },
+        {
+            "name": "index.html",
+            "path": "index.html",
+            "sha": "new-sha",
+            "type": "file",
+            "content": btoa("<h1>Hello world!</h1>")
+        }
+      ]
+    // Call the function and check the result
+    const result = (await createPullRequest(description, repository, ghToken, apiToken, true)).repoContents;
     expect(result).toEqual(updatedRepo);
   });
 

@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { Form, Input, Button, Select, List, Card } from 'antd';
+import { Form, Input, Button, Select, List, Card, Checkbox, Popover } from 'antd';
 import { FormInstance } from 'antd/lib/form';
+import { QuestionCircleOutlined } from '@ant-design/icons';
 import { RepositoriesState, TypePrRef } from './types';
 import { BACKEND_URL, CREATE_TICKET_PATH } from './config';
 const { Option } = Select;
 
 import './App.css';
 import { submitButtonStyle } from './styles';
+
+const popoverContent = (
+  <div>
+    <p>
+      Check this if you want to use the GitHub API instead of "git clone".
+      Needed for private repositories.
+      NOTE: This might not work for large repositories due to GitHub API rate limitations.
+    </p>
+  </div>
+);
 
 function GptForm(): JSX.Element {
   const formRef = React.useRef<FormInstance>(null);
@@ -34,9 +45,12 @@ function GptForm(): JSX.Element {
       console.log('No OpenAI API token');
       return
     }
+    var cli = 'true';
+    if(values.checked) cli = 'false';
     const data = {
       description: values.description,
-      repository: repository
+      repository: repository,
+      cli: cli
     };
     setResLoading(true);
     await axios.post(`${BACKEND_URL}${CREATE_TICKET_PATH}`, data, {
@@ -63,6 +77,16 @@ function GptForm(): JSX.Element {
       <div className="form-container">
         <Card title="Create task" className='card'>
           <Form onFinish={onFinish} ref={formRef} className="form" title="Create task">
+            <Form.Item name="agreement" valuePropName="checked">
+              <Checkbox>
+              Use GitHub API
+                <Popover content={popoverContent} title="Use GitHub API">
+                  <Button type="link" size="small">
+                    <QuestionCircleOutlined />
+                  </Button>
+                </Popover>
+              </Checkbox>
+            </Form.Item>
             <Form.Item label="Repository" name="repository" rules={[{ required: true, message: 'Please select a repository' }]}>
               <Select disabled={resLoading} loading={loading} placeholder="Select a repository" onChange={handleSelectChange}>
                 {repositories.map((repo) => (
