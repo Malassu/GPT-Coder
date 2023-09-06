@@ -29,14 +29,14 @@ const prTitleSchema = {
   }
 }
 
-const executeChat = (taskDescription, repoContents) => `I have the following GitHub repository contents:\n---${repoContents}\n
+const executeChat = (taskDescription, repoContents) => `I have the following GitHub repository files, preceeded by their respective paths:\n---${repoContents}\n
 Could you give me the updated/modified code for the repository given the following task: "${taskDescription}"?
+Please make sure that if code in your answer references any other files in the repository, you refer with the correct paths that I gave above.
 Please prefix each source code snippet of your answer to the format of this following example:
-<|fileUpdate><|path>(file path here, refer to repository contents above)</|path><|contents>(file contents here)</|contents><|message>(a commit message for your code snippet)</|message></|fileUpdate>
+<|fileUpdate><|path>file path here, refer to repository contents above</|path><|contents>file contents here</|contents><|message>a commit message for your code snippet</|message></|fileUpdate>
 Be sure to use "<|" for opening tags and "</|" for closing tags. Your response can contain multiple file updates of the above format.
 The file doesn't have to exist in the repo if you intend to create it and the path shouldn't start with a slash.
-I'll parse to source code you give using the following regex: /\\<\\|contents\\>([\\s\\S]+?)\\<\\/\\|contents\\>/.
-Please make sure that if I write the parsed code to a file, all the identation and whitespace in the resulting file is valid with respect to the file type.`
+Please make sure that if I write the parsed code to a file, all the identation and whitespace in the resulting file is valid with respect to the file type. Also, please add an empty line to the end of each file.`
 
 const prTitle = (description) => `What would be the best GitHub pull request title for a PR that implements the following changes: ${description}
 Please give your response in the following JSON format: {"prTitle": <your_response>}, where you replace <your_response> with the PR title suggestion.`

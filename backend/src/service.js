@@ -18,13 +18,14 @@ async function createPullRequest(description, repository, ghToken, apiToken, cli
 
     const defaultBranch = repoResponse.data.default_branch;
     const repoFullName = repoResponse.data.full_name;
+    const githubUser = repoResponse.data.owner.login;
     const newBranch = generateUniqueBranchName();
     await createBranch(newBranch, defaultBranch, repository, ghToken);
 
     var repoContents = [];
     var expRepoContents = [];
     if(cli) {
-      const tmpDir = cloneGitRepository(repoFullName);
+      const tmpDir = cloneGitRepository(repoFullName, githubUser, ghToken);
       console.log('Temporary directory created: ', tmpDir);
       expRepoContents = expandRepoContentsCli(tmpDir);
     } else {
@@ -62,22 +63,22 @@ async function createPullRequest(description, repository, ghToken, apiToken, cli
       let sha = getFileSha(item.path, expRepoContents);
       if(sha !== null && sha !== undefined) params['sha'] = sha;
       if(sha === undefined) {
-        await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,
-          {
-            ref: `refs/heads/${newBranch}`
-          },
+        let shaRes = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,
           {
             headers: {
               Authorization: `Bearer ${ghToken}`,
             },
+          },
+          {
+            params: {
+              ref: `refs/heads/${newBranch}`
+            }
           }
         )
-          .then((response) => {
-            params['sha'] = response.data.sha;
-          })
           .catch((error) => {
             console.log('Error fetching updated/created file, reverting to non-existing SHA: ', error);
           });
+        params['sha'] = shaRes.data.sha;
         await sleep(200);
       }
       let fileRes = await axios.put(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${item.path}`,

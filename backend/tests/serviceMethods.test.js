@@ -21,18 +21,21 @@ const initialRepo = [
     "path": "README.md",
     "sha": "d37d7779cd624f70485b66967d45f2553a283b82",
     "size": 23,
-    "url": "https://api.github.com/repos/QCodersOy/fullstack-application/contents/README.md?ref=main",
-    "html_url": "https://github.com/QCodersOy/fullstack-application/blob/main/README.md",
-    "git_url": "https://api.github.com/repos/QCodersOy/fullstack-application/git/blobs/d37d7779cd624f70485b66967d45f2553a283b82",
-    "download_url": "https://raw.githubusercontent.com/QCodersOy/fullstack-application/main/README.md",
-    "type": "file",
-    "_links": {
-      "self": "https://api.github.com/repos/QCodersOy/fullstack-application/contents/README.md?ref=main",
-      "git": "https://api.github.com/repos/QCodersOy/fullstack-application/git/blobs/d37d7779cd624f70485b66967d45f2553a283b82",
-      "html": "https://github.com/QCodersOy/fullstack-application/blob/main/README.md"
-    }
+    "type": "file"
   }
 ]
+
+const repoInfo = {
+  "id": 403020410,
+  "node_id": "MDEwOlJlcG9zaXRvcnk0MDMwMjA0MTA=",
+  "name": "react-weatherapp",
+  "full_name": "Malassu/react-weatherapp",
+  "private": false,
+  "owner": {
+    "login": "Malassu"
+  },
+  "default_branch": "master"
+}
 
 const expandedRepo = [
     {
@@ -41,16 +44,7 @@ const expandedRepo = [
       "sha": "d37d7779cd624f70485b66967d45f2553a283b82",
       "content": btoa("This is a fullstack-application"),
       "size": 23,
-      "url": "https://api.github.com/repos/QCodersOy/fullstack-application/contents/README.md?ref=main",
-      "html_url": "https://github.com/QCodersOy/fullstack-application/blob/main/README.md",
-      "git_url": "https://api.github.com/repos/QCodersOy/fullstack-application/git/blobs/d37d7779cd624f70485b66967d45f2553a283b82",
-      "download_url": "https://raw.githubusercontent.com/QCodersOy/fullstack-application/main/README.md",
-      "type": "file",
-      "_links": {
-        "self": "https://api.github.com/repos/QCodersOy/fullstack-application/contents/README.md?ref=main",
-        "git": "https://api.github.com/repos/QCodersOy/fullstack-application/git/blobs/d37d7779cd624f70485b66967d45f2553a283b82",
-        "html": "https://github.com/QCodersOy/fullstack-application/blob/main/README.md"
-      }
+      "type": "file"
     }
   ]
 
@@ -85,7 +79,7 @@ describe('createPullRequest', () => {
 
     // Mock the axios get and put requests
     axios.get.mockResolvedValueOnce({
-      data: initialRepo,
+      data: repoInfo,
     });
     axios.put.mockResolvedValueOnce({
       data: { content: { sha: 'new-sha' } },
@@ -100,16 +94,7 @@ describe('createPullRequest', () => {
           "sha": "new-sha",
           "content": btoa("These are the new contents"),
           "size": 23,
-          "url": "https://api.github.com/repos/QCodersOy/fullstack-application/contents/README.md?ref=main",
-          "html_url": "https://github.com/QCodersOy/fullstack-application/blob/main/README.md",
-          "git_url": "https://api.github.com/repos/QCodersOy/fullstack-application/git/blobs/d37d7779cd624f70485b66967d45f2553a283b82",
-          "download_url": "https://raw.githubusercontent.com/QCodersOy/fullstack-application/main/README.md",
-          "type": "file",
-          "_links": {
-            "self": "https://api.github.com/repos/QCodersOy/fullstack-application/contents/README.md?ref=main",
-            "git": "https://api.github.com/repos/QCodersOy/fullstack-application/git/blobs/d37d7779cd624f70485b66967d45f2553a283b82",
-            "html": "https://github.com/QCodersOy/fullstack-application/blob/main/README.md"
-          }
+          "type": "file"
         }
       ]
     // Call the function and check the result
@@ -137,7 +122,7 @@ describe('createPullRequest', () => {
 
     // Mock the axios get and put requests
     axios.get.mockResolvedValueOnce({
-      data: initialRepo,
+      data: repoInfo,
     });
     axios.put.mockResolvedValueOnce({
       data: { content: { sha: 'new-sha' } },
@@ -196,7 +181,7 @@ ReactDOM.render(
 
     // Mock the axios get and put requests
     axios.get.mockResolvedValueOnce({
-      data: initialRepo,
+      data: repoInfo,
     });
     axios.put.mockResolvedValueOnce({
       data: { content: { sha: 'new-sha' } },
@@ -258,7 +243,7 @@ ReactDOM.render(
 
     // Mock the axios get and put requests
     axios.get.mockResolvedValueOnce({
-      data: initialRepo,
+      data: repoInfo,
     });
     axios.put.mockResolvedValueOnce({
       data: { content: { sha: 'new-sha' } },
@@ -310,7 +295,7 @@ ReactDOM.render(
 
     // Mock the axios get and put requests
     axios.get.mockResolvedValueOnce({
-      data: initialRepo,
+      data: repoInfo,
     });
     axios.get.mockResolvedValueOnce({
       data: {sha: "fetched-sha"},
@@ -357,7 +342,7 @@ ReactDOM.render(
 
     // Mock the axios get and put requests
     axios.get.mockResolvedValueOnce({
-      data: initialRepo,
+      data: repoInfo,
     });
     axios.get.mockRejectedValueOnce({
       response: {

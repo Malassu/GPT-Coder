@@ -15,7 +15,6 @@ const popoverContent = (
   <div>
     <p>
       Check this if you want to use the GitHub API instead of "git clone".
-      Needed for private repositories.
       NOTE: This might not work for large repositories due to GitHub API rate limitations.
     </p>
   </div>
@@ -46,7 +45,10 @@ function GptForm(): JSX.Element {
       return
     }
     var cli = 'true';
-    if(values.checked) cli = 'false';
+    console.log('GitHub API: ', values.agreement);
+    if(values.agreement) {
+      cli = 'false';
+    }
     const data = {
       description: values.description,
       repository: repository,

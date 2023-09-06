@@ -10,14 +10,16 @@ const filteredExtensions = [
   '.bmp',
   'package-lock.json',
   'yarn.lock',
+  'license',
   '.zip',
   '.tar',
   '.gz',
-  '.git'
+  '.git',
+  '.gitignore'
 ];
 
 function isExcluded(filePath) {
-  const extension = filePath.toLowerCase(); // Get the last 4 characters as extension
+  const extension = filePath.toLowerCase();
   return filteredExtensions.some(item => extension.includes(item));
 }
 
@@ -128,12 +130,14 @@ async function fetchRepoContents(repository, branch, ghToken) {
   try {
     const repoResponse = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/`,
       {
-        ref: `refs/heads/${branch}`
-      },
-      {
         headers: {
           Authorization: `Bearer ${ghToken}`,
         },
+      },
+      {
+        params: {
+          ref: `refs/heads/${branch}`
+        }
       }
     );
     return repoResponse.data;
@@ -164,17 +168,20 @@ function sleep(ms) {
 
 async function expandRepoContents(contents, repository, ghToken, newBranch) {
   if (Array.isArray(contents)) {
+    contents = contents.filter((item) => !isExcluded(item.path));
     const expandedContents = await Promise.all(contents.map(async (item) => await expandRepoContents(item, repository, ghToken, newBranch)));
     return expandedContents;
   } else if (typeof contents === 'object' && contents !== null) {
     const objectContents = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repository}/contents/${contents.path}`,
       {
-        ref: `refs/heads/${newBranch}`
-      },
-      {
         headers: {
           Authorization: `Bearer ${ghToken}`,
         },
+      },
+      {
+        params: {
+          ref: `refs/heads/${newBranch}`
+        }
       }
     );
     await sleep(150);
@@ -190,14 +197,14 @@ async function expandRepoContents(contents, repository, ghToken, newBranch) {
 }
 
 
-function cloneGitRepository(repositoryFull) {
+function cloneGitRepository(repositoryFull, username, ghToken) {
   var shell = require('shelljs');
   if (!shell.which('git')) {
     shell.echo('Sorry, this script requires git');
     shell.exit(1);
   }
   const tmpDir = generateUniqueBranchName();
-  if(shell.exec(`git clone git@github.com:${repositoryFull}.git ${tmpDir}`).code !== 0) throw new Error('Cannot clone git repository');
+  if(shell.exec(`git clone https://${username}:${ghToken}@github.com/${repositoryFull}.git ${tmpDir}`).code !== 0) throw new Error('Cannot clone git repository');
   return tmpDir;
 }
 
@@ -215,8 +222,10 @@ function expandRepoContentsCli(tmpDir) {
     })
     .forEach(function(file) {
       try {
-        let content = btoa(shell.cat([`${tmpDir}/${file}`]));
-        contents.push({name: file.split('/').at(-1), path: file, type: 'file', content: content, sha: undefined});
+        let contentRes = shell.cat([`${tmpDir}/${file}`])
+        if(contentRes.code === 0) {
+          contents.push({name: file.split('/').at(-1), path: file, type: 'file', content: btoa(contentRes), sha: undefined});
+        }
       } catch (error) {
         console.warn(`Encountered error: ${error} while processing file: `, file);
       }
