@@ -123,7 +123,7 @@ async function createPullRequest(description, repository, ghToken, apiToken, cli
     return {'pullRequest': pullRes.data.html_url, 'repoContents': expRepoContents};
 
   } catch (error) {
-    console.error('Error fetching GitHub information:', error);
+    console.error('Error creating a PR:', error);
     throw error;
   }
 }

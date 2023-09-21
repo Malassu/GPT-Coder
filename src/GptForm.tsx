@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { Form, Input, Button, Select, List, Card, Checkbox, Popover } from 'antd';
+import { Form, Input, Button, Select, List, Card, Checkbox, Popover, message } from 'antd';
 import { FormInstance } from 'antd/lib/form';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { RepositoriesState, TypePrRef } from './types';
@@ -69,6 +69,13 @@ function GptForm(): JSX.Element {
       })
       .catch((error) => {
         console.error('Error:', error);
+        if (error.response) {
+          message.error(`An error occurred most likely due to repository/prompt being too large: ${error.response.data.error}`);
+        } else if (error.request) {
+          message.error(`An error occurred: ${error.request}`);
+        } else {
+          message.error(`An error occurred: ${error.message}`);
+        }
       });
     setResLoading(false);
     formRef.current?.resetFields();

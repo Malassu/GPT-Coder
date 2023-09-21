@@ -52,8 +52,8 @@ app.post('/ticket', extractTokenMiddleware, async (req, res) => {
     console.log('Created code to git:', response);
     res.json(response);
   } catch (error) {
-    console.error('Error generating completion:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Error creating a PR to GitHub: ', error);
+    res.status(500).json({ error: `Error creating a PR to GitHub: ${error}` });
   }
 });
 
