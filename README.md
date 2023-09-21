@@ -28,6 +28,6 @@ Enter your GitHub access token and OpenAI token and you can start prompting!
 A suite of unit tests can be ran for the backend application with `npx jest`.
 You can lint both backend and frontend applications by running `npm lint` or `npm lint:fix` in their respective folders.
 
-# Licence
+# License
 
 This project is licensed under the terms of the GNU General Public License v3.0.
